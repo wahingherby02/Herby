@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, BackHandler, Alert } from 'react-native';
+import { 
+  View, Text, FlatList, TouchableOpacity, StyleSheet, Image, BackHandler, Alert, Modal 
+} from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect } from '@react-navigation/native';
 import db from '../database';
@@ -8,20 +10,18 @@ export default function UserListScreen({ route, navigation }) {
   const { username } = route.params;
   const [users, setUsers] = useState([]);
   const [currentPhoto, setCurrentPhoto] = useState(null);
+  const [aboutVisible, setAboutVisible] = useState(false);
 
-  // Load users
   const loadUsers = () => {
     const allUsers = db.getAllSync('SELECT * FROM users');
     setUsers(allUsers.filter((u) => u.username !== username));
   };
 
-  // Load current user photo
   const loadCurrentUserPhoto = () => {
     const user = db.getFirstSync('SELECT photo FROM users WHERE username = ?', [username]);
     setCurrentPhoto(user?.photo || null);
   };
 
-  // Disable back button on this screen
   useFocusEffect(
     React.useCallback(() => {
       const backHandler = BackHandler.addEventListener('hardwareBackPress', () => true);
@@ -71,9 +71,14 @@ export default function UserListScreen({ route, navigation }) {
 
       <View style={styles.headerContainer}>
         <Text style={styles.header}>Hello, {username}</Text>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row' }}>
+          <TouchableOpacity style={styles.aboutButton} onPress={() => setAboutVisible(true)}>
+            <Text style={styles.aboutText}>About</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <FlatList
@@ -95,41 +100,173 @@ export default function UserListScreen({ route, navigation }) {
           </TouchableOpacity>
         )}
       />
+
+      {/* About Modal */}
+      <Modal
+        visible={aboutVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setAboutVisible(false)}
+      >
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>About the App</Text>
+            <Text style={styles.modalText}>Creator: Eugene J. Wahing</Text>
+            <Text style={styles.modalText}>Facebook: So ja</Text>
+            <Text style={styles.modalText}>Phone: 09938920645</Text>
+            <Text style={styles.modalText}>Address: San Roque, Mbini, Bohol</Text>
+
+            <TouchableOpacity style={styles.closeButton} onPress={() => setAboutVisible(false)}>
+              <Text style={styles.closeText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#f4f4f8' },
-  profileContainer: { alignItems: 'center', marginBottom: 15 },
-  currentAvatar: { width: 100, height: 100, borderRadius: 50, marginBottom: 10 },
+  container: { 
+    flex: 1, 
+    padding: 20, 
+    backgroundColor: '#000' 
+  },
+  profileContainer: { 
+    alignItems: 'center', 
+    marginBottom: 20 
+  },
+  currentAvatar: { 
+    width: 100, 
+    height: 100, 
+    borderRadius: 50, 
+    marginBottom: 10, 
+    borderWidth: 2,
+    borderColor: '#FFD700'
+  },
   defaultAvatar: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#6C63FF',
+    backgroundColor: '#FFD700',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
   },
-  defaultInitials: { color: '#fff', fontSize: 40, fontWeight: 'bold' },
-  photoButton: { backgroundColor: '#6C63FF', padding: 8, borderRadius: 10 },
-  photoText: { color: '#fff', fontWeight: 'bold' },
-  headerContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
-  header: { fontSize: 22, fontWeight: 'bold', color: '#6C63FF' },
-  logoutButton: { backgroundColor: '#FF4D4D', padding: 8, borderRadius: 10 },
-  logoutText: { color: '#fff', fontWeight: 'bold' },
-  userRow: { flexDirection: 'row', alignItems: 'center', padding: 12, backgroundColor: '#6C63FF', borderRadius: 15, marginBottom: 10 },
-  avatar: { width: 50, height: 50, borderRadius: 25, marginRight: 12 },
+  defaultInitials: { 
+    color: '#000', 
+    fontSize: 40, 
+    fontWeight: 'bold' 
+  },
+  photoButton: { 
+    backgroundColor: '#FFD700', 
+    paddingVertical: 8, 
+    paddingHorizontal: 15, 
+    borderRadius: 10 
+  },
+  photoText: { 
+    color: '#000', 
+    fontWeight: 'bold' 
+  },
+  headerContainer: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginBottom: 15 
+  },
+  header: { 
+    fontSize: 22, 
+    fontWeight: 'bold', 
+    color: '#FFD700' 
+  },
+  logoutButton: { 
+    backgroundColor: '#FF4D4D', 
+    paddingVertical: 8, 
+    paddingHorizontal: 15, 
+    borderRadius: 10,
+    marginLeft: 10
+  },
+  logoutText: { 
+    color: '#fff', 
+    fontWeight: 'bold' 
+  },
+  aboutButton: {
+    backgroundColor: '#FFD700',
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 10
+  },
+  aboutText: {
+    color: '#000',
+    fontWeight: 'bold'
+  },
+  userRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    padding: 12, 
+    backgroundColor: '#FFD700', 
+    borderRadius: 15, 
+    marginBottom: 10 
+  },
+  avatar: { 
+    width: 50, 
+    height: 50, 
+    borderRadius: 25, 
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: '#000'
+  },
   defaultAvatarSmall: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#6C63FF',
+    backgroundColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
-  defaultInitialsSmall: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
-  userText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+  defaultInitialsSmall: { 
+    color: '#FFD700', 
+    fontSize: 20, 
+    fontWeight: 'bold' 
+  },
+  userText: { 
+    color: '#000', 
+    fontSize: 18, 
+    fontWeight: 'bold' 
+  },
+  modalBackground: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  modalContent: {
+    backgroundColor: '#FFD700',
+    padding: 25,
+    borderRadius: 15,
+    width: '80%',
+    alignItems: 'center'
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 15
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 8,
+    color: '#000'
+  },
+  closeButton: {
+    marginTop: 15,
+    backgroundColor: '#000',
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 10
+  },
+  closeText: {
+    color: '#FFD700',
+    fontWeight: 'bold'
+  }
 });
